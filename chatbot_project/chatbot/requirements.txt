@@ -1,0 +1,9 @@
+Flask==2.3.0
+Werkzeug==2.3.0
+gTTS
+requests
+SpeechRecognition==3.10.0
+pydub
+openai>=1.0.0
+python-dotenv
+httpx==0.24.1

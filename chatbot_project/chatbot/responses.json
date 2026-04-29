@@ -1,0 +1,87 @@
+[
+  {
+    "intent": "greeting",
+    "patterns": ["hello", "hi", "hey", "good morning", "good evening"],
+    "responses": ["Hello! How can I help you today?", "Hi there! What can I do for you?"]
+  },
+  {
+    "intent": "goodbye",
+    "patterns": ["bye", "goodbye", "see you", "later"],
+    "responses": ["Goodbye! Have a great day!", "See you later!"]
+  },
+  {
+    "intent": "thanks",
+    "patterns": ["thanks", "thank you", "thank u"],
+    "responses": ["You're welcome!", "Happy to help!"]
+  },
+  {
+    "intent": "ai_definition",
+    "patterns": ["what is ai", "define artificial intelligence", "explain ai"],
+    "responses": ["AI is the simulation of human intelligence processes by machines.", "Artificial Intelligence allows machines to learn and perform tasks that usually require human intelligence."]
+  },
+  {
+    "intent": "machine_learning",
+    "patterns": ["machine learning", "ml", "what is ml"],
+    "responses": ["Machine Learning is a subset of AI where systems learn from experience.", "ML allows computers to improve performance without being explicitly programmed."]
+  },
+  {
+    "intent": "deep_learning",
+    "patterns": ["deep learning", "what is deep learning"],
+    "responses": ["Deep Learning uses neural networks with multiple layers to process data.", "It enables computers to handle complex tasks like image and speech recognition."]
+  },
+  {
+    "intent": "neural_network",
+    "patterns": ["neural network", "what is neural network"],
+    "responses": ["A neural network is inspired by the human brain and used in deep learning.", "Neural networks are used for pattern recognition and AI tasks."]
+  },
+  {
+    "intent": "python",
+    "patterns": ["python", "what is python", "python language"],
+    "responses": ["Python is a simple and powerful language, great for AI and web development.", "Python is readable, versatile, and used in data science, AI, and backend development."]
+  },
+  {
+    "intent": "javascript",
+    "patterns": ["javascript", "js", "what is javascript"],
+    "responses": ["JavaScript is used for web development to create interactive websites.", "JS can also run on servers using Node.js."]
+  },
+  {
+    "intent": "java",
+    "patterns": ["java language", "what is java", "java"],
+    "responses": ["Java is a robust, object-oriented programming language.", "Java is widely used in large-scale enterprise applications and Android development."]
+  },
+  {
+    "intent": "c++",
+    "patterns": ["c++", "what is c++", "c plus plus"],
+    "responses": ["C++ is a high-performance language used in games and system software.", "It allows fine control over memory and processing speed."]
+  },
+  {
+    "intent": "rust",
+    "patterns": ["rust programming", "what is rust"],
+    "responses": ["Rust focuses on safety and performance in systems programming.", "Rust is modern and prevents many types of bugs at compile time."]
+  },
+  {
+    "intent": "ai_future",
+    "patterns": ["future of ai", "ai in future", "ai trends"],
+    "responses": ["The future of AI includes smarter assistants, autonomous systems, and advanced robotics.", "AI will revolutionize industries like healthcare, finance, and transportation."]
+  },
+  {
+    "intent": "ai_applications",
+    "patterns": ["ai applications", "where is ai used", "uses of ai"],
+    "responses": ["AI is used in chatbots, recommendation systems, autonomous vehicles, and medical diagnosis.", "It helps automate processes, analyze data, and enhance decision-making."]
+  },
+  {
+    "intent": "coding",
+    "patterns": ["coding", "programming", "learn coding"],
+    "responses": ["Coding is giving instructions to computers to perform tasks.", "It combines logic, problem-solving, and creativity."]
+  },
+  {
+    "intent": "who_are_you",
+    "patterns": ["who are you", "what are you"],
+    "responses": ["I'm your AI assistant!", "I'm a chatbot here to help you with tech questions and conversation."]
+  },
+  {
+    "intent": "joke",
+    "patterns": ["tell me a joke", "funny", "joke"],
+    "responses": ["Why did the programmer quit his job? Because he didn't get arrays! 😄", "Why do Java developers wear glasses? Because they can't C#."]
+  }
+]

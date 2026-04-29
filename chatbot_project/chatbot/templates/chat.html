@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+
+    <!-- CSS FILE -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🤖</div>
+                <span>ChatBot</span>
+            </div>
+            
+            <div class="user-card">
+                <div class="user-label">👤 Account</div>
+                <div class="username">{{ username }}</div>
+            </div>
+            
+            <a href="{{ url_for('history') }}" class="logout-btn highlight">📚 Chat History</a>
+            <a href="{{ url_for('chat') }}" class="logout-btn">+ New Chat</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Sign Out</a>
+        </div>
+        
+        <div class="main">
+            <div class="header-wrapper">
+                <div class="header">💬 Chat Assistant</div>
+                <div class="language-selector">
+                    <label for="langDropdown">🌍 Select Language:</label>
+                    <select id="langDropdown" class="lang-dropdown">
+                        <option value="en" selected>🇬🇧 English</option>
+                        <option value="ta">🇮🇳 Tamil</option>
+                        <option value="si">🇱🇰 Sinhala</option>
+                        <option value="hi">🇮🇳 Hindi</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chat-box" id="chatBox">
+                <div class="message bot">
+                    <svg class="bot-avatar" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="neon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#10a37f;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0d9d70;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Brain center -->
+                        <circle cx="50" cy="50" r="15" fill="url(#neon-gradient)" />
+                        <!-- Neural connections -->
+                        <line x1="50" y1="50" x2="25" y2="25" stroke="#10a37f" stroke-width="2" opacity="0.7" />
+                        <line x1="50" y1="50" x2="75" y2="25" stroke="#10a37f" stroke-width="2" opacity="0.7" />
+                        <line x1="50" y1="50" x2="25" y2="75" stroke="#10a37f" stroke-width="2" opacity="0.7" />
+                        <line x1="50" y1="50" x2="75" y2="75" stroke="#10a37f" stroke-width="2" opacity="0.7" />
+                        <!-- Outer nodes -->
+                        <circle cx="25" cy="25" r="6" fill="#10a37f" opacity="0.8" />
+                        <circle cx="75" cy="25" r="6" fill="#10a37f" opacity="0.8" />
+                        <circle cx="25" cy="75" r="6" fill="#10a37f" opacity="0.8" />
+                        <circle cx="75" cy="75" r="6" fill="#10a37f" opacity="0.8" />
+                        <!-- Pulsing center -->
+                        <circle cx="50" cy="50" r="12" fill="none" stroke="#10a37f" stroke-width="1.5" opacity="0.6" />
+                    </svg>
+                    <div class="message-text">Hi there! 👋 I'm your AI assistant. Ask me anything!</div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button class="voice-btn" id="voiceBtn" title="Click to record voice message">🎤</button>
+                <button class="send-btn" id="sendBtn">Send</button>
+            </div>
+            <div class="voice-status" id="voiceStatus" style="display: none;">
+                <span class="recording-dot"></span>
+                <span id="statusText">Recording...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS FILE -->
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

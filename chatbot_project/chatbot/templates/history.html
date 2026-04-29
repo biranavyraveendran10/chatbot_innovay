@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat History - ChatBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Link External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🤖</div>
+                <span>ChatBot</span>
+            </div>
+            
+            <div class="user-card">
+                <div class="user-label">👤 Account</div>
+                <div class="username">{{ username }}</div>
+            </div>
+            
+            <a href="{{ url_for('history') }}" class="nav-link active">📚 Chat History</a>
+            <a href="{{ url_for('chat') }}" class="nav-link">+ New Chat</a>
+            
+            <a href="{{ url_for('logout') }}" class="logout-btn">Sign Out</a>
+        </div>
+        
+        <div class="main">
+            <div class="header">📚 Chat History</div>
+            
+            <div class="history-container">
+                {% if history_by_date %}
+                    {% for date, messages in history_by_date.items() %}
+                        <div class="date-group">
+                            <div class="date-header">{{ date }}</div>
+                            {% for msg in messages %}
+                                <div class="history-item">
+                                    <div class="message-time">🕐 {{ msg.time }}</div>
+                                    <div class="user-message">You: {{ msg.message }}</div>
+                                    <div class="bot-response">Bot: {{ msg.response }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">No Chat History Yet</div>
+                        <div class="empty-state-subtext">Start a new conversation to see your chat history here!</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Link External JS -->
+    <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+</body>
+</html>

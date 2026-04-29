@@ -1,0 +1,47 @@
+{
+    "users": [],
+    "chat_history": [
+        {
+            "user_id": 4,
+            "message": "hii",
+            "response": "Hi there! What can I do for you?",
+            "timestamp": "2026-01-28 11:27:17"
+        },
+        {
+            "user_id": 4,
+            "message": "what is your bname",
+            "response": "That's interesting! I'm still learning. Could you tell me more?",
+            "timestamp": "2026-01-28 11:27:38"
+        },
+        {
+            "user_id": 4,
+            "message": "what is your name",
+            "response": "That's interesting! I'm still learning. Could you tell me more?",
+            "timestamp": "2026-01-28 11:27:44"
+        },
+        {
+            "user_id": 4,
+            "message": "help",
+            "response": "I can help you with various questions. Try asking me hello, how I am, or tell me something about yourself!",
+            "timestamp": "2026-01-28 11:27:55"
+        },
+        {
+            "user_id": 4,
+            "message": "python",
+            "response": "Python is a fantastic language! It's simple, readable, and perfect for AI, web development, and data science!",
+            "timestamp": "2026-01-28 11:28:03"
+        },
+        {
+            "user_id": 4,
+            "message": "what is python",
+            "response": "Python is a fantastic language! It's simple, readable, and perfect for AI, web development, and data science!",
+            "timestamp": "2026-01-28 11:28:08"
+        },
+        {
+            "user_id": 4,
+            "message": "what i ai",
+            "response": "AI (Artificial Intelligence) is the simulation of human intelligence processes by machines.",
+            "timestamp": "2026-01-28 11:28:12"
+        }
+    ]
+}
