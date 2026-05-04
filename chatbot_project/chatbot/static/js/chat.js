@@ -9,6 +9,7 @@ let selectedLanguage = 'en';  // Default language
 let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
+let micStream = null;
 
 // Language selector event listener
 langDropdown.addEventListener('change', (e) => {
@@ -17,7 +18,8 @@ langDropdown.addEventListener('change', (e) => {
 
 // Initialize Web Speech API
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+let isRecognitionRunning = false;
 
 // Speech recognition language mapping
 const speechLangMap = {
@@ -27,9 +29,18 @@ const speechLangMap = {
     'hi': 'hi-IN'
 };
 
-recognition.continuous = false;
-recognition.interimResults = true;
-recognition.lang = speechLangMap[selectedLanguage];
+if (recognition) {
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = speechLangMap[selectedLanguage];
+
+    recognition.onstart = () => {
+        isRecognitionRunning = true;
+    };
+    recognition.onend = () => {
+        isRecognitionRunning = false;
+    };
+}
 
 // Handle voice button click
 voiceBtn.addEventListener('click', () => {
@@ -48,20 +59,36 @@ function startVoiceRecording() {
     audioChunks = [];
     
     // Update language for speech recognition
-    recognition.lang = speechLangMap[selectedLanguage];
+    if (recognition) {
+        recognition.lang = speechLangMap[selectedLanguage];
+    }
     
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
+            micStream = stream;
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.ondataavailable = (event) => {
                 audioChunks.push(event.data);
             };
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const mimeType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm';
+                const audioBlob = new Blob(audioChunks, { type: mimeType });
                 processVoiceMessage(audioBlob);
             };
             mediaRecorder.start();
-            recognition.start();
+
+            // Start browser speech recognition (best-effort).
+            // Guard to avoid: "recognition has already started"
+            if (recognition) {
+                try {
+                    if (isRecognitionRunning) {
+                        recognition.stop();
+                    }
+                    recognition.start();
+                } catch (e) {
+                    console.warn('SpeechRecognition start failed:', e);
+                }
+            }
         })
         .catch(error => {
             console.error('Microphone access denied:', error);
@@ -79,32 +106,60 @@ function stopVoiceRecording() {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         }
-        recognition.stop();
+
+        // Stop microphone stream tracks
+        if (micStream) {
+            try {
+                micStream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                console.warn('Failed to stop mic tracks:', e);
+            }
+            micStream = null;
+        }
+
+        // Stop speech recognition safely
+        if (recognition && isRecognitionRunning) {
+            try {
+                recognition.stop();
+            } catch (e) {
+                console.warn('SpeechRecognition stop failed:', e);
+            }
+        }
     }
 }
 
 // Handle speech recognition results
-recognition.onresult = (event) => {
-    let transcript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-    }
-    
-    if (event.isFinal) {
-        messageInput.value = transcript;
-    }
-};
+if (recognition) {
+    recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
 
-recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-    addMessage('❌ Speech recognition error: ' + event.error, false);
-    stopVoiceRecording();
-};
+        // If the browser produces a final transcript, show it in the input box.
+        // (The server-side transcription is still the source of truth.)
+        if (event.results && event.results[event.results.length - 1] && event.results[event.results.length - 1].isFinal) {
+            messageInput.value = transcript;
+        }
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        // "network" often means the browser's speech service can't be reached.
+        // We can still try server-side transcription.
+        if (event.error !== 'network') {
+            addMessage('❌ Speech recognition error: ' + event.error, false);
+        } else {
+            console.warn('Browser speech network error; continuing with server transcription.');
+        }
+    };
+}
 
 async function processVoiceMessage(audioBlob) {
     try {
         const formData = new FormData();
-        formData.append('audio', audioBlob, 'voice_message.wav');
+        const fileExt = (audioBlob.type && audioBlob.type.includes('ogg')) ? 'ogg' : 'webm';
+        formData.append('audio', audioBlob, `voice_message.${fileExt}`);
         formData.append('language', selectedLanguage);
         
         const response = await fetch('/api/transcribe', {
@@ -112,7 +167,14 @@ async function processVoiceMessage(audioBlob) {
             body: formData
         });
         
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        let data;
+        if (contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            throw new Error(`Server returned non-JSON response (${response.status}). ${text.slice(0, 200)}`);
+        }
         
         if (response.ok) {
             messageInput.value = data.transcribed_text;
@@ -120,6 +182,7 @@ async function processVoiceMessage(audioBlob) {
             await sendMessage();
         } else {
             addMessage('❌ ' + (data.error || 'Failed to transcribe audio'), false);
+            console.error('Transcribe API error:', data);
         }
     } catch (error) {
         console.error('Error processing voice message:', error);

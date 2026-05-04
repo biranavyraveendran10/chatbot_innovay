@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import sqlite3
 import os
 from functools import wraps
@@ -8,6 +9,8 @@ from datetime import datetime, timedelta, timezone
 import json
 import random
 from gtts import gTTS
+import tempfile
+import uuid
 
 # NLP imports
 from sklearn.feature_extraction.text import CountVectorizer
@@ -230,46 +233,90 @@ def transcribe_audio():
     """Transcribe audio using Speech Recognition"""
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
-    
+
     audio_file = request.files['audio']
-    language = request.form.get('language', 'en')
-    
+    language = (request.form.get('language', 'en') or 'en').lower()
+
+    # Import speech recognition inside the route so the app can still start
+    # even if the package isn't installed yet.
+    import speech_recognition as sr
+
+    # Language code mapping for Google Speech Recognition
+    lang_code_map = {
+        'en': 'en-US',
+        'ta': 'ta-IN',
+        'si': 'si-LK',
+        'hi': 'hi-IN'
+    }
+    lang_code = lang_code_map.get(language, 'en-US')
+
+    raw_path = None
+    wav_path = None
+
     try:
-        # Save temporary audio file
-        temp_audio = f'uploads/temp_audio_{datetime.now().strftime("%Y%m%d%H%M%S%f")}.wav'
-        audio_file.save(temp_audio)
-        
-        # Import speech recognition
-        import speech_recognition as sr
+        original_name = secure_filename(audio_file.filename or '')
+        _, ext = os.path.splitext(original_name)
+        ext = (ext or '').lower()
+        if ext not in {'.wav', '.flac', '.aiff', '.aif', '.webm', '.ogg', '.m4a', '.mp3'}:
+            # Browser MediaRecorder commonly sends webm/ogg without an extension.
+            ext = '.webm'
+
+        # Save into a real temp folder (not uploads) and use a unique name
+        tmp_dir = tempfile.gettempdir()
+        raw_path = os.path.join(tmp_dir, f'voice_{uuid.uuid4().hex}{ext}')
+        audio_file.save(raw_path)
+
+        # SpeechRecognition's AudioFile supports WAV/AIFF/FLAC only.
+        # If the upload is not one of those, convert to WAV.
+        if ext in {'.wav', '.flac', '.aiff', '.aif'}:
+            wav_path = raw_path
+        else:
+            try:
+                from pydub import AudioSegment
+            except Exception:
+                return jsonify({
+                    'error': 'Server is missing audio conversion support. Please install pydub (and ffmpeg) or use text input.'
+                }), 500
+
+            wav_path = os.path.join(tmp_dir, f'voice_{uuid.uuid4().hex}.wav')
+            try:
+                audio_seg = AudioSegment.from_file(raw_path)
+                audio_seg = audio_seg.set_channels(1).set_frame_rate(16000)
+                audio_seg.export(wav_path, format='wav')
+            except Exception as e:
+                print(f"✗ Audio conversion failed: {e}")
+                return jsonify({
+                    'error': 'Could not read/convert the recorded audio. On Windows, install ffmpeg and try again.'
+                }), 400
+
         recognizer = sr.Recognizer()
-        
-        # Language code mapping for speech recognition
-        lang_code_map = {
-            'en': 'en-US',
-            'ta': 'ta-IN',
-            'si': 'si-LK',
-            'hi': 'hi-IN'
-        }
-        
-        lang_code = lang_code_map.get(language, 'en-US')
-        
-        with sr.AudioFile(temp_audio) as source:
+        with sr.AudioFile(wav_path) as source:
             audio_data = recognizer.record(source)
-        
-        # Use Google Speech Recognition
-        transcribed_text = recognizer.recognize_google(audio_data, language=lang_code)
-        
-        # Clean up temp file
-        os.remove(temp_audio)
-        
+
+        try:
+            transcribed_text = recognizer.recognize_google(audio_data, language=lang_code)
+        except sr.UnknownValueError:
+            return jsonify({'error': 'Could not understand audio. Please try again.'}), 400
+        except sr.RequestError as e:
+            # This is usually network / Google service issues
+            print(f"✗ Speech recognition request error: {e}")
+            return jsonify({'error': 'Speech recognition service error. Please check internet and try again.'}), 502
+
         return jsonify({'transcribed_text': transcribed_text})
-    
-    except sr.UnknownValueError:
-        return jsonify({'error': 'Could not understand audio. Please try again.'}), 400
-    except sr.RequestError as e:
-        return jsonify({'error': f'Speech recognition service error: {str(e)}'}), 500
+
     except Exception as e:
-        return jsonify({'error': f'Transcription error: {str(e)}'}), 500
+        # IMPORTANT: always return JSON, never an HTML error page
+        print(f"✗ Transcription error: {e}")
+        return jsonify({'error': 'Transcription failed on server. Please try again.'}), 500
+
+    finally:
+        # Always clean up temp files
+        for path in {raw_path, wav_path}:
+            try:
+                if path and os.path.exists(path):
+                    os.remove(path)
+            except Exception:
+                pass
 
 @app.route('/api/message', methods=['POST'])
 
